@@ -8,17 +8,11 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
-find_package(geometry_msgs REQUIRED)
-find_package(kdl_parser REQUIRED)
-find_package(urdf REQUIRED)
+find_package(std_msgs REQUIRED)
 
 add_executable(ur5_control_node
   src/main.cpp
-  src/kdl_controller.cpp
-  src/motion_task1.cpp
-  src/keyboard_task2.cpp
 )
 
 target_include_directories(ur5_control_node PUBLIC
@@ -28,9 +22,7 @@ target_include_directories(ur5_control_node PUBLIC
 ament_target_dependencies(ur5_control_node
   rclcpp
   sensor_msgs
-  geometry_msgs
-  kdl_parser
-  urdf
+  std_msgs
 )
 
 install(TARGETS ur5_control_node
@@ -43,12 +35,7 @@ install(DIRECTORY launch
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
-  # the following line skips the linter which checks for copyrights
-  # comment the line when a copyright and license is added to all source files
   set(ament_cmake_copyright_FOUND TRUE)
-  # the following line skips cpplint (only works in a git repo)
-  # comment the line when this package is in a git repo and when
-  # a copyright and license is added to all source files
   set(ament_cmake_cpplint_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
 endif()
