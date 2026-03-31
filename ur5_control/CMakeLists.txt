@@ -9,6 +9,37 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(kdl_parser REQUIRED)
+find_package(urdf REQUIRED)
+
+add_executable(ur5_control_node
+  src/main.cpp
+  src/kdl_controller.cpp
+  src/motion_task1.cpp
+  src/keyboard_task2.cpp
+)
+
+target_include_directories(ur5_control_node PUBLIC
+  include
+)
+
+ament_target_dependencies(ur5_control_node
+  rclcpp
+  sensor_msgs
+  geometry_msgs
+  kdl_parser
+  urdf
+)
+
+install(TARGETS ur5_control_node
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME}
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
