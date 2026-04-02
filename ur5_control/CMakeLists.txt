@@ -28,6 +28,11 @@ ament_target_dependencies(sub_node rclcpp std_msgs master_ros2)
 # 1. First create the executable
 add_executable(motion_task1 src/motion_task1.cpp src/ik_controller.cpp)
 
+# --- TASK 2 ---
+add_executable(keyboard_task2 src/keyboard_task2.cpp src/ik_controller.cpp)
+target_include_directories(keyboard_task2 PUBLIC include)
+ament_target_dependencies(keyboard_task2 rclcpp sensor_msgs kdl_parser orocos_kdl urdf)
+
 # 2. Then add the include directories
 target_include_directories(motion_task1 PUBLIC include)
 
@@ -45,6 +50,9 @@ install(DIRECTORY launch
 
 install(TARGETS
   motion_task1
+  keyboard_task2
+  ur5_control_node
+  
   DESTINATION lib/${PROJECT_NAME}
 )
 
