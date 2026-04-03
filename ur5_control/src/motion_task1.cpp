@@ -6,31 +6,26 @@
 
 using namespace std::chrono_literals;
 
-// We create a class for our node. Think of it as a blueprint for our robot controller.
 class MotionTask1Node : public rclcpp::Node {
 public:
-    // ==========================================
-    // PART 1: THE SETUP (Constructor)
-    // This runs exactly ONCE when you start the program.
-    // ==========================================
     MotionTask1Node(int user_chosen_mode) : Node("motion_task1") {
         mode = user_chosen_mode;
 
-        // 1. Get the robot description (URDF) from ROS 2
+        // Get the robot description - URDF
         this->declare_parameter<std::string>("robot_description", "");
         std::string urdf_string;
         this->get_parameter("robot_description", urdf_string);
 
-        // 2. Turn on our IK Controller (The Math Brain)
+        // Turn on IK Controller
         ik_controller.init(urdf_string, "base_link", "tool0");
 
-        // 3. Setup how we talk to the robot (Publisher) and how fast we run (Timer)
+        // Setup the robot joint Publisher 
         joint_publisher = this->create_publisher<sensor_msgs::msg::JointState>("/joint_states", 10);
         
         // 500 Hz means running our loop every 2 milliseconds
         timer = this->create_wall_timer(2ms, std::bind(&MotionTask1Node::controlLoop, this));
 
-        // 4. Set up starting and ending points
+        // joint names
         joint_names = {"shoulder_pan_joint", "shoulder_lift_joint", "elbow_joint", 
                        "wrist_1_joint", "wrist_2_joint", "wrist_3_joint"};
         
@@ -38,40 +33,29 @@ public:
         start_joints = current_joints;
         goal_joints  = {0.5, -1.0, 1.0, -1.0, -1.57, 0.5};
 
-        // Find out where the robot hand is right now in 3D space
         ik_controller.computeFK(start_joints, start_pose);
 
-        // Set our goal 20cm forward (x) and 10cm up (z)
+        // goal 20cm forward (x) and 10cm up (z)
         goal_pose = start_pose;
         goal_pose.p.x(start_pose.p.x() + 0.2);
         goal_pose.p.z(start_pose.p.z() + 0.1);
 
-        // Record the exact time we started
         start_time = this->now();
     }
 
 private:
-    // ==========================================
-    // PART 2: THE LOOP
-    // This runs 500 times every single second.
-    // ==========================================
     void controlLoop() {
-        // How much time has passed since we started?
         auto current_time = this->now();
         double time_elapsed = (current_time - start_time).seconds();
-
-        // Stop moving if 5 seconds have passed
         if (time_elapsed >= 5.0) {
             return; 
         }
-
-        // Calculate our progress from 0.0 (start) to 1.0 (finish)
-        // We use a cosine curve so the robot speeds up slowly and slows down smoothly (No jerking!)
+        // We use a cosine curve so the robot speeds up slowly and slows down smoothly (No jerking!) - interpolation
         double progress = 0.5 * (1.0 - std::cos(M_PI * (time_elapsed / 5.0)));
 
         std::vector<double> target_joints(6, 0.0);
 
-        // --- JOINT SPACE MODE (Mode 0) ---
+        // JOINT SPACE MODE (Mode 0)
         if (mode == 0) {
             for (int i = 0; i < 6; i++) {
                 // Formula: Current = Start + Progress * (Difference between Goal and Start)
@@ -80,16 +64,16 @@ private:
             current_joints = target_joints;
         } 
         
-        // --- CARTESIAN SPACE MODE (Mode 1) ---
+        // CARTESIAN SPACE MODE (Mode 1)
         else if (mode == 1) {
             KDL::Frame target_pose;
             
-            // 1. Move XYZ position smoothly
+            // Move XYZ position smoothly
             for (int i = 0; i < 3; i++) {
                 target_pose.p(i) = start_pose.p(i) + progress * (goal_pose.p(i) - start_pose.p(i));
             }
 
-            // 2. Move Rotation smoothly
+            // Move Rotation smoothly
             double start_roll, start_pitch, start_yaw;
             double goal_roll, goal_pitch, goal_yaw;
             
@@ -111,10 +95,6 @@ private:
         publishJoints(current_joints);
     }
 
-    // ==========================================
-    // PART 3: THE HELPER
-    // Packages the joint angles and sends them to RViz
-    // ==========================================
     void publishJoints(const std::vector<double>& joints) {
         sensor_msgs::msg::JointState msg;
         msg.header.stamp = this->now();
@@ -122,8 +102,6 @@ private:
         msg.position = joints;
         joint_publisher->publish(msg);
     }
-
-    // Variables that our class needs to remember
     int mode;
     rclcpp::Time start_time;
     IKController ik_controller;
@@ -139,9 +117,6 @@ private:
     KDL::Frame goal_pose;
 };
 
-// ==========================================
-// MAIN PROGRAM STARTS HERE
-// ==========================================
 int main(int argc, char** argv) {
     rclcpp::init(argc, argv); // Start ROS 2
 

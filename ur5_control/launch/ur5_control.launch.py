@@ -31,14 +31,14 @@ def generate_launch_description():
         arguments=['-d', rviz_config_file]
     )
 
-    #Task 1- motion control
-    # motion_task1_node = Node(
-    #     package='ur5_control',
-    #     executable='motion_task1',
-    #     output='screen',
-    #     prefix="xterm -e",
-    #     parameters=[{'robot_description': robot_description}]
-    # )
+    # Task 1- motion control
+    motion_task1_node = Node(
+        package='ur5_control',
+        executable='motion_task1',
+        output='screen',
+        prefix="xterm -e",
+        parameters=[{'robot_description': robot_description}]
+    )
 
     #task 2- keyboard control
     keyboard_task2_node = Node(
@@ -52,6 +52,6 @@ def generate_launch_description():
     return LaunchDescription([
         robot_state_publisher_node,
         rviz_node,
-        # motion_task1_node,
-        keyboard_task2_node
+        motion_task1_node
+        # keyboard_task2_node
     ])
